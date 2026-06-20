@@ -1,0 +1,18 @@
+package com.example.product_service.Enums;
+
+public enum Category {
+    ELECTRONICS,
+    FASHION_APPAREL,
+    BEAUTY_PERSONAL_CARE,
+    HOME_FURNITURE,
+    FOOD_GROCERY,
+    BEVERAGES,
+    DIY_HARDWARE,
+    TOYS_HOBBIES,
+    MEDIA_ENTERTAINMENT,
+    SPORTS_FITNESS,
+    BABY_MATERNITY,
+    BOOKS_MEDIA,
+    HEALTH_SUPPLEMENTS,
+    AUTOMOTIVE_PARTS
+}
