@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Read Spring props -->
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="api-gateway-service"/>
+    <springProperty scope="context" name="ENV" source="spring.profiles.active" defaultValue="dev"/>
+    <property name="LOGSTASH_HOST" value="${LOGSTASH_HOST:-localhost}"/>
+    <property name="LOGSTASH_PORT" value="${LOGSTASH_PORT:-5000}"/>
+
+    <!-- Console (pretty JSON) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <pattern>
+                    <pattern>
+                        {
+                        "level": "%level",
+                        "logger": "%logger",
+                        "thread": "%thread",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+                <mdc/> <!-- includes traceId/spanId from Micrometer -->
+                <context/>
+                <globalCustomFields>{"service":"${APP_NAME}","env":"${ENV}"}</globalCustomFields>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- Ship to Logstash over TCP as JSON lines -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>
+        <remoteHost>${LOGSTASH_HOST}</remoteHost>
+        <port>${LOGSTASH_PORT}</port>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <mdc/>
+                <context/>
+                <pattern>
+                    <pattern>
+                        {
+                        "level":"%level",
+                        "logger":"%logger{36}",
+                        "thread":"%thread",
+                        "message":"%message"
+                        }
+                    </pattern>
+                </pattern>
+                <globalCustomFields>{"service":"${APP_NAME}","env":"${ENV}"}</globalCustomFields>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <!--<appender-ref ref="LOGSTASH"/>-->
+    </root>
+</configuration>
