@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main]
+    paths:
+      - 'auth-service/**'
 
 jobs:
   build-and-push:
@@ -19,6 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Run tests
+        working-directory: ./auth-service
         run: mvn test
 
       - name: Log in to GHCR
@@ -31,6 +34,6 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./auth-service
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/auth-service:latest
