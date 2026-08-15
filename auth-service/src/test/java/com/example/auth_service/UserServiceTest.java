@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class UserServiceTest {
@@ -22,6 +24,9 @@ public class UserServiceTest {
     UserRepository userRepository;
     @Mock
     RoleRepository roleRepository;
+    @Mock
+    PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void setUp()
     {
@@ -29,20 +34,31 @@ public class UserServiceTest {
 
     }
     @Test
-    void save()
-    {
-        UserDto userDto=new UserDto();
+    void save() {
+
+        UserDto userDto = new UserDto();
         userDto.setUserName("ABC");
         userDto.setPassword("123");
         userDto.setRole("User");
-        User user=new User();
+
+        User user = new User();
         user.setUserName("ABC");
-        user.setPassword("123");
+        user.setPassword("encodedPassword");
+
         Role r = new Role();
         r.setName("User");
-        when(userRepository.save(user)).thenReturn(user);
-        when(roleRepository.findByRolename("User")).thenReturn(r);
-        boolean isUserSaved=userService.saveUser(userDto);
-        Assertions.assertTrue(isUserSaved);
+
+        when(passwordEncoder.encode("123"))
+                .thenReturn("encodedPassword");
+
+        when(roleRepository.findByRolename("User"))
+                .thenReturn(r);
+
+        when(userRepository.save(any(User.class)))
+                .thenReturn(user);
+
+        User u = userService.saveUser(userDto);
+
+        Assertions.assertNotNull(u);
     }
 }
