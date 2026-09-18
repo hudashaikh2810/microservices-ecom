@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: config-server
+
+  cloud:
+    config:
+      enabled: false
+      server:
+        git:
+          uri: https://github.com/hudashaikh2810/ecoomerce-config-repo.git
+          username: ${GITHUB_USERNAME}
+          password: ${GITHUB_TOKEN}
+          default-label: main
+
+server:
+  port: 8888
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,refresh

@@ -6,12 +6,12 @@ spring:
     name: rate-limiter-service
 
   config:
-    import: "optional:configserver:http://localhost:8888"
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 eureka:
   client:
@@ -21,4 +21,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: refresh,busrefresh,health
+        include: health
