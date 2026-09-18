@@ -1,4 +1,7 @@
-push:
+name: rate-limiter Pipeline
+
+on:
+  push:
   branches: [main]
   paths:
     - 'rate-limiter/**'
