@@ -2,9 +2,9 @@ name: rate-limiter Pipeline
 
 on:
   push:
-  branches: [main]
-  paths:
-    - 'rate-limiter/**'
+    branches: [main]
+    paths:
+      - 'rate-limiter/**'
 
 jobs:
   build-and-push:
