@@ -23,7 +23,6 @@ public class ConfigLookupService {
     public RateLimitConfig getConfig(String resourceName) {
         String cacheKey = "rateLimiter:config:" + resourceName;
 
-
         if (rateLimitConfig.containsKey(cacheKey)) {
             return rateLimitConfig.get(cacheKey);
         }
