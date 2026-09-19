@@ -7,33 +7,30 @@ on:
       - 'rate-limiter/**'
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-      - name: Set up JDK 17
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
-
       - name: Run tests
-        working-directory: ./rate-limiter
-        run: mvn test
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./rate-limiter
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/rate-limiter:latest
+        run: ./mvnw test
+      - name: Build jar
+        run: ./mvnw package -DskipTests
+      - name: Build Docker image
+        run: docker build -t rate-limiter-service .
