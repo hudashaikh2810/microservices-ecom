@@ -30,6 +30,7 @@ public class TokenBucketStrategy implements RateLimiterStrategy {
                 new ClassPathResource("scripts/token_bucket.lua"), List.class);
     }
 
+
     @Override
     public RateLimitResult checkLimit(String clientId, RateLimitConfig config) {
         String key = "rateLimiter:state:tokenbucket:" + clientId;
