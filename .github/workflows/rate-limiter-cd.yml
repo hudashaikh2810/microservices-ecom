@@ -1,8 +1,8 @@
- name: rate-limiter Deploy
+name: rate-limiter Deploy
 
 on:
   workflow_run:
-    workflows: ["rate-limiter Pipeline"]   # must exactly match the `name:` in your CI file
+    workflows: ["rate-limiter Pipeline"]
     types:
       - completed
 
@@ -10,6 +10,7 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
