@@ -19,17 +19,17 @@ import java.util.Map;
 @Component
 public class TokenBucketStrategy implements RateLimiterStrategy {
 
-    private final StringRedisTemplate stringRedisTemplate;
+/*    private final StringRedisTemplate stringRedisTemplate*/;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final RedisScript<List> tokenBucketScript;
 
-    public TokenBucketStrategy(StringRedisTemplate stringRedisTemplate) {
-        this.stringRedisTemplate = stringRedisTemplate;
-
-
+    public TokenBucketStrategy(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate=redisTemplate;
+     /*   this.stringRedisTemplate = stringRedisTemplate;*/
         this.tokenBucketScript = RedisScript.of(
                 new ClassPathResource("scripts/token_bucket.lua"), List.class);
     }
-    /*
+
     @Override
     public RateLimitResult checkLimit(String clientId, RateLimitConfig config) {
         String key = "rateLimiter:state:tokenbucket:" + clientId;
@@ -78,8 +78,8 @@ public class TokenBucketStrategy implements RateLimiterStrategy {
 
         return new RateLimitResult(allowed, retryAfter);
     }
-*/
 
+/*
     @Override
     @SuppressWarnings("unchecked")
     public RateLimitResult checkLimit(String clientId, RateLimitConfig config) {
@@ -102,7 +102,7 @@ public class TokenBucketStrategy implements RateLimiterStrategy {
         return new RateLimitResult(allowed, retryAfter);
     }
 
-
+*/
 
     @Override
     public String getAlgorithmType() {
