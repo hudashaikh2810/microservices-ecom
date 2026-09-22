@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 class TokenBucketStrategyConcurrencyTest {
-
 /*
     @Autowired
     private TokenBucketStrategy tokenBucketStrategy;
