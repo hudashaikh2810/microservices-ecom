@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 class TokenBucketStrategyConcurrencyTest {
-/*
+
     @Autowired
     private TokenBucketStrategy tokenBucketStrategy;
 
@@ -70,5 +70,5 @@ class TokenBucketStrategyConcurrencyTest {
                 "Expected exactly " + CAPACITY + " requests to be allowed under concurrent load, got " + allowedCount.get());
     }
 
- */
+
 }
