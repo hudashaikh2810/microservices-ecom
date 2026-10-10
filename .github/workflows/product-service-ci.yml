@@ -1,0 +1,102 @@
+name: product-service CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "product-service/**"
+      - ".github/workflows/product-service-ci.yml"
+  pull_request:
+    paths:
+      - "product-service/**"
+      - ".github/workflows/product-service-ci.yml"
+
+# cancel older runs of the same branch/PR when a new commit arrives
+concurrency:
+  group: product-service-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SERVICE_DIR: product-service
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/product-service
+
+jobs:
+  test:
+    name: Unit + integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: product-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: product-service/pom.xml
+
+      # git on Windows can commit mvnw without the execute bit
+      - name: Make mvnw executable
+        run: chmod +x mvnw
+
+      # Docker is preinstalled on ubuntu-latest, so Testcontainers
+      # (Postgres + Redis) works with no service containers declared here.
+      # `verify` runs *Test via Surefire, then *IT via Failsafe.
+      - name: Run unit and integration tests
+        run: ./mvnw -B verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-service-test-reports
+          path: |
+            product-service/target/surefire-reports
+            product-service/target/failsafe-reports
+          if-no-files-found: ignore
+
+  build-and-push:
+    name: Build and push Docker image
+    needs: test
+    # only publish from main, never from PRs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # needed for the gha cache backend (default docker driver can't export it)
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # lowercases the image name and creates the tags
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.SERVICE_DIR }}
+          file: ${{ env.SERVICE_DIR }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

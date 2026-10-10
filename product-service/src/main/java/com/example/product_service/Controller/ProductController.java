@@ -1,67 +1,66 @@
 package com.example.product_service.Controller;
 
-import com.example.product_service.DTO.ProductDto;
-import com.example.product_service.DTO.ProductMetaDto;
-import com.example.product_service.DTO.SKUDto;
-import com.example.product_service.Entity.Product;
+import com.example.product_service.DTO.*;
 import com.example.product_service.Service.ProductService;
-import com.example.product_service.Service.SkuCreatedEvent;
-import com.example.product_service.wrapper.RestPage;
-import jakarta.ws.rs.core.MediaType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.net.URI;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/products")
 public class ProductController {
-    @Autowired
-    private ProductService productService;
-    @Autowired
-    private SkuCreatedEvent evt;
 
-    @PostMapping(value = "/admin/add")
-    public ResponseEntity<?> addProdduct(@RequestBody ProductDto productDto) {
-        ProductDto savedProductDto = productService.addProduct(productDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedProductDto);
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
     }
 
-    @DeleteMapping("/admin/delete/{id}")
-    public ResponseEntity<?> deleteProduct(@PathVariable long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.ok("Product deleted successfully");
-    }
+    @PostMapping
+    public ResponseEntity<ProductResponse> save(@Valid @RequestBody ProductCreateRequest request) {
+        ProductResponse response = productService.save(request);
 
-    @PutMapping(value = "/admin/update/{id}")
-    public ResponseEntity<?> deleteProduct(@RequestPart("product") ProductDto productDto, @PathVariable long id) {
-        ProductDto updatedProductDto = productService.updateProduct(id, productDto);
-        return ResponseEntity.ok(updatedProductDto);
+        return ResponseEntity.created(URI.create("/products/" + response.getId())).body(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProductById(@PathVariable long id) {
-        return ResponseEntity.ok(productService.getProduct(id));
+    public ResponseEntity<ShowProductResponse> show(@PathVariable UUID id) {
+        return ResponseEntity.ok(productService.showActiveProduct(id));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") int page,
-                                    @RequestParam(defaultValue = "10") int size,
-                                    @RequestParam(defaultValue = "ELECTRONICS") String sortBy,
-                                    @RequestParam(defaultValue = "asc") String sortDir) {
-        RestPage<ProductMetaDto> products = productService.findAll(page, size, sortBy, sortDir);
-        Map<String, Object> response = new HashMap<>();
-        response.put("products", products.getContent());
-        response.put("currentPage", products.getNumber());
-        response.put("totalItems", products.getTotalElements());
-        response.put("totalPages", products.getTotalPages());
-        return ResponseEntity.ok(response);
-
+    @GetMapping
+    public ResponseEntity<ProductPage> search(
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) String attributeKey,
+            @RequestParam(required = false) String attributeValue,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(
+                productService.search(categoryId, attributeKey, attributeValue, cursor, size));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(@PathVariable UUID id,
+                                       @Valid @RequestBody ProductUpdateRequest request) {
+        productService.update(id, request);
+        return ResponseEntity.noContent().build();
+    }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/publish")
+    public ResponseEntity<Void> publish(@PathVariable UUID id) {
+        productService.publish(id);
+        return ResponseEntity.noContent().build();
+    }
 }

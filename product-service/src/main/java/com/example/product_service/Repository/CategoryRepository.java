@@ -1,0 +1,13 @@
+package com.example.product_service.Repository;
+
+import com.example.product_service.Entity.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface CategoryRepository extends JpaRepository<Category, UUID> {
+    List<Category> findByParentIsNull();
+
+    List<Category> findByParentId(UUID parentId);
+}
